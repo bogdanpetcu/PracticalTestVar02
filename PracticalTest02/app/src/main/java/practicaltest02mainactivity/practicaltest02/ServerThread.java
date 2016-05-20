@@ -21,6 +21,7 @@ public class ServerThread extends Thread {
 
     public ServerThread(int port) {
         this.port = port;
+
         try {
             this.serverSocket = new ServerSocket(port);
         } catch (IOException ioException) {

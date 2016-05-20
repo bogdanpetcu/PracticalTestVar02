@@ -5,24 +5,12 @@ package practicaltest02mainactivity.practicaltest02;
  */
 public class Timer {
 
-    public String ip;
     public String hour;
     public String minute;
-    public String status;
 
-    public Timer(String ip, String hour, String minute, String status) {
-        this.ip = ip;
+    public Timer(String hour, String minute) {
         this.hour = hour;
         this.minute = minute;
-        this.status = status;
-    }
-
-    public String getIp() {
-        return ip;
-    }
-
-    public void setIp(String ip) {
-        this.ip = ip;
     }
 
     public String getHour() {
@@ -41,11 +29,5 @@ public class Timer {
         this.minute = minute;
     }
 
-    public String getStatus() {
-        return status;
-    }
 
-    public void setStatus(String status) {
-        this.status = status;
-    }
 }

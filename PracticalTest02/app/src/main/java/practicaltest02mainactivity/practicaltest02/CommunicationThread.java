@@ -7,10 +7,13 @@ import java.net.Socket;
  */
 import android.util.Log;
 
+import org.apache.http.HttpEntity;
+import org.apache.http.HttpResponse;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.ResponseHandler;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
+import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.impl.client.BasicResponseHandler;
 import org.apache.http.impl.client.DefaultHttpClient;
@@ -44,40 +47,40 @@ public class CommunicationThread extends Thread {
             try {
                 BufferedReader bufferedReader = Utilities.getReader(socket);
                 PrintWriter printWriter = Utilities.getWriter(socket);
+
                 if (bufferedReader != null && printWriter != null) {
+
                     Log.i(Constants.TAG, "[COMMUNICATION THREAD] Waiting for parameters from client");
+                    String ip = socket.getInetAddress().toString();
                     String type = bufferedReader.readLine();
-                    String informationType = bufferedReader.readLine();
+                    String hour = bufferedReader.readLine();
+                    String minute = bufferedReader.readLine();
 
                     HashMap<String, Timer> data = serverThread.getData();
 
                     Timer timer = null;
 
-                    if (type != null && !type.isEmpty() && informationType != null && !informationType.isEmpty()) {
-                        if (data.containsKey(type)) {
-                            Log.i(Constants.TAG, "[COMMUNICATION THREAD] Getting the information from the cache...");
-                            timer = data.get(type);
-                        } else {
-                            Log.i(Constants.TAG, "[COMMUNICATION THREAD] Getting the information from the webservice...");
-                            HttpClient httpClient = new DefaultHttpClient();
-                            HttpPost httpPost = new HttpPost(Constants.WEB_SERVICE_ADDRESS);
-                            List<NameValuePair> params = new ArrayList<NameValuePair>();
-                            params.add(new BasicNameValuePair(Constants.QUERY_ATTRIBUTE, type));
-                            UrlEncodedFormEntity urlEncodedFormEntity = new UrlEncodedFormEntity(params, HTTP.UTF_8);
-                            httpPost.setEntity(urlEncodedFormEntity);
-                            ResponseHandler<String> responseHandler = new BasicResponseHandler();
+                    if (type != null && !type.isEmpty() && type != null && !type.isEmpty()) {
+                        if(type.equals("set")) {
+                            data.put(socket.getInetAddress().toString(), new Timer(hour, minute));
 
-
-                        }
-
-                        if (timer != null) {
-                            String result = null;
-
-                            printWriter.println(result);
+                            printWriter.println("succesful set");
                             printWriter.flush();
-                        } else {
-                            Log.e(Constants.TAG, "[COMMUNICATION THREAD] Weather Forecast information is null!");
+                        } else if (type.equals("reset")) {
+                            data.remove(data.get(socket.getInetAddress().toString()));
+                            printWriter.println("succesful reset");
+                            printWriter.flush();
+                        } else if (type.equals("poll")) {
+                            HttpClient httpClient = new DefaultHttpClient();
+                            HttpGet httpGet = new HttpGet("http://www.timeapi.org/utc/now");
+
+                            ResponseHandler<String> responseHandler = new BasicResponseHandler();
+                            String content = httpClient.execute(httpGet, responseHandler);
+
+                            printWriter.println("succesful poll");
+                            printWriter.flush();
                         }
+
 
                     } else {
                         Log.e(Constants.TAG, "[COMMUNICATION THREAD] Error receiving parameters from client (city / information type)!");
@@ -90,11 +93,6 @@ public class CommunicationThread extends Thread {
                 Log.e(Constants.TAG, "[COMMUNICATION THREAD] An exception has occurred: " + ioException.getMessage());
                 if (Constants.DEBUG) {
                     ioException.printStackTrace();
-                }
-            } catch (JSONException jsonException) {
-                Log.e(Constants.TAG, "[COMMUNICATION THREAD] An exception has occurred: " + jsonException.getMessage());
-                if (Constants.DEBUG) {
-                    jsonException.printStackTrace();
                 }
             }
         } else {
